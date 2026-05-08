@@ -10,6 +10,8 @@ import { circleClubs, useCircleStore } from '@/store/circle-store';
 import { BottomNav } from './bottom-nav';
 import { Header, Screen } from './shared';
 
+const VERSION_LABEL = 'ВЕРСИЯ ОТ 2026-05-08 14:44';
+
 export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReload, onBack, onHome, onClub }: { isDevFallback: boolean; initData: string; debugInfo: TelegramDebugInfo; onForceReload: () => void; onBack: () => void; onHome: () => void; onClub: () => void }) {
   const streak = useCircleStore((state) => state.streak);
   const totalPoints = useCircleStore((state) => state.totalPoints);
@@ -20,10 +22,22 @@ export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReloa
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
+  const [sdkStatus, setSdkStatus] = useState<'FOUND' | 'NOT FOUND'>('NOT FOUND');
   const username = telegramUser?.username || 'telegram_user';
   const fullName = [telegramUser?.first_name, telegramUser?.last_name].filter(Boolean).join(' ') || 'Telegram User';
   const achievements = [streak >= 7, streak >= 30, totalPoints >= 100, checkIns.length >= 1, referralBonusClaimed].filter(Boolean).length;
   const joinedClubs = circleClubs.filter((club) => joinedClubIds.includes(club.id));
+  const versionBanner = (
+    <div style={{ background: 'red', color: 'white', padding: '20px', position: 'fixed', top: 0, zIndex: 9999 }}>
+      {VERSION_LABEL}
+      <br />
+      SDK: {sdkStatus}
+    </div>
+  );
+
+  useEffect(() => {
+    setSdkStatus(typeof window !== 'undefined' && window.Telegram ? 'FOUND' : 'NOT FOUND');
+  }, []);
 
   useEffect(() => {
     setAvatarFailed(false);
@@ -33,6 +47,7 @@ export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReloa
   if (!telegramUser?.id) {
     return (
       <Screen>
+        {versionBanner}
         <Header title="Профиль" onBack={onBack} />
         <Card className="text-center">
           <div className="mx-auto h-[104px] w-[104px] animate-pulse rounded-full bg-white/10" />
@@ -51,6 +66,7 @@ export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReloa
 
   return (
     <Screen>
+      {versionBanner}
       <Header title="Профиль" onBack={onBack} />
       {isDevFallback && (
         <div className="rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">

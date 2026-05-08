@@ -1,12 +1,23 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import type { TelegramUser } from '@/hooks/use-telegram';
 import { activityFeed, clubs, currentUser, leaderboard, users } from '@/lib/mock-data';
 import { ActivityItem, CheckInItem, LeaderboardEntry } from '@/types';
 
 const DAY = 1000 * 60 * 60 * 24;
+
+const noopStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined
+};
+
+function getPersistStorage() {
+  if (typeof window === 'undefined') return noopStorage;
+  return window.localStorage;
+}
 
 function dateKey(value = new Date()) {
   return value.toISOString().slice(0, 10);
@@ -210,6 +221,7 @@ export const useCircleStore = create<CircleState>()(
     }),
     {
       name: 'circle-retention-v1',
+      storage: createJSONStorage(getPersistStorage),
       partialize: (state) => ({
         onboarded: state.onboarded,
         selectedClubId: state.selectedClubId,

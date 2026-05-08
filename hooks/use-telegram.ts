@@ -34,21 +34,25 @@ export type TelegramDebugInfo = {
 };
 
 function hasTelegramLaunchParams() {
+  if (typeof window === 'undefined') return false;
   const source = `${window.location.search}&${window.location.hash.replace(/^#/, '')}`;
   return source.includes('tgWebAppData') || source.includes('tgWebAppVersion') || source.includes('tgWebAppPlatform');
 }
 
 function getTelegramDebug(app: TelegramWebApp | null, isTelegram: boolean): TelegramDebugInfo {
+  const hasBrowser = typeof window !== 'undefined';
+  const hasNavigator = typeof navigator !== 'undefined';
+
   return {
     isTelegram,
-    hasWindowTelegram: Boolean(window.Telegram),
+    hasWindowTelegram: Boolean(hasBrowser && window.Telegram),
     hasWebApp: Boolean(app),
     hasUser: Boolean(app?.initDataUnsafe?.user?.id),
     userId: app?.initDataUnsafe?.user?.id,
     initDataLength: app?.initData?.length ?? 0,
     urlHasLaunchParams: hasTelegramLaunchParams(),
     initData: app?.initData ?? '',
-    userAgent: navigator.userAgent
+    userAgent: hasNavigator ? navigator.userAgent : ''
   };
 }
 
@@ -63,12 +67,15 @@ export function useTelegram() {
   const [isLoading, setIsLoading] = useState(true);
   const [isTelegram, setIsTelegram] = useState(false);
   const forceReload = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
     const app = window.Telegram?.WebApp ?? null;
-    console.log('[Circle Telegram] Force reload SDK requested', getTelegramDebug(app, Boolean(app) || hasTelegramLaunchParams() || /Telegram/i.test(navigator.userAgent)));
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    console.log('[Circle Telegram] Force reload SDK requested', getTelegramDebug(app, Boolean(app) || hasTelegramLaunchParams() || /Telegram/i.test(userAgent)));
 
     if (!app) {
       setWebApp(null);
-      setIsTelegram(hasTelegramLaunchParams() || /Telegram/i.test(navigator.userAgent));
+      setIsTelegram(hasTelegramLaunchParams() || /Telegram/i.test(userAgent));
       return;
     }
 
@@ -79,7 +86,10 @@ export function useTelegram() {
   }, []);
 
   useEffect(() => {
-    const userAgentLooksTelegram = /Telegram/i.test(navigator.userAgent);
+    if (typeof window === 'undefined') return;
+
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    const userAgentLooksTelegram = /Telegram/i.test(userAgent);
     const urlLooksTelegram = hasTelegramLaunchParams();
     if (userAgentLooksTelegram || urlLooksTelegram) {
       setIsTelegram(true);
@@ -89,7 +99,7 @@ export function useTelegram() {
     const load = () => {
       const app = window.Telegram?.WebApp ?? null;
       if (!app) {
-        console.log('[Circle Telegram] WebApp not available yet', { hasWindowTelegram: Boolean(window.Telegram), userAgent: navigator.userAgent, href: window.location.href });
+        console.log('[Circle Telegram] WebApp not available yet', { hasWindowTelegram: Boolean(window.Telegram), userAgent, href: window.location.href });
         return false;
       }
 
