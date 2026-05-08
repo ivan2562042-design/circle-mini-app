@@ -21,7 +21,7 @@ export function CircleApp() {
   const initializeTelegramUser = useCircleStore((state) => state.initializeTelegramUser);
   const setStorageKey = useCircleStore((state) => state.setStorageKey);
   const storageReady = useCircleStore((state) => state.storageReady);
-  const { user, initData, isLoading, isTelegram, debug, forceReload } = useTelegram();
+  const { user, isLoading, isTelegram } = useTelegram();
   const [screen, setScreen] = useState<Screen>('onboarding');
   const isDevFallback = !isTelegram;
 
@@ -66,14 +66,6 @@ export function CircleApp() {
             <div className="mx-auto h-24 w-24 animate-pulse rounded-full bg-white/10" />
             <div className="mx-auto mt-5 h-7 w-40 animate-pulse rounded-full bg-white/10" />
             <div className="mx-auto mt-3 h-4 w-28 animate-pulse rounded-full bg-white/10" />
-            <div className="mt-5 rounded-2xl bg-white/[0.04] p-3 text-xs text-muted-foreground">
-              <p>Telegram Debug</p>
-              <p>isTelegram: {String(debug.isTelegram)}</p>
-              <p>hasWebApp: {String(debug.hasWebApp)}</p>
-              <p>hasUser: {String(debug.hasUser)}</p>
-              <p>initDataLength: {debug.initDataLength}</p>
-              <button className="mt-2 rounded-xl bg-emerald-300 px-3 py-2 font-black text-slate-950" onClick={forceReload}>Force Reload SDK</button>
-            </div>
             <div className="mt-8 grid grid-cols-3 gap-3">
               <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
               <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
@@ -92,7 +84,7 @@ export function CircleApp() {
           {screen === 'onboarding' && <OnboardingScreen key="onboarding" onStart={start} />}
           {screen === 'home' && <HomeScreen key="home" onOpenClub={openClub} onProfile={() => setScreen('profile')} />}
           {screen === 'club' && <ClubScreen key="club" clubId={selectedClubId} onBack={() => setScreen('home')} onHome={() => setScreen('home')} onProfile={() => setScreen('profile')} />}
-          {screen === 'profile' && <ProfileScreen key="profile" isDevFallback={isDevFallback} initData={initData} debugInfo={debug} onForceReload={forceReload} onBack={() => setScreen('home')} onHome={() => setScreen('home')} onClub={openDefaultClub} />}
+          {screen === 'profile' && <ProfileScreen key="profile" isDevFallback={isDevFallback} onBack={() => setScreen('home')} onHome={() => setScreen('home')} onClub={openDefaultClub} />}
         </AnimatePresence>
       </div>
     </main>

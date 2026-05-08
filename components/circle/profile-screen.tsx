@@ -5,14 +5,11 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
-import type { TelegramDebugInfo } from '@/hooks/use-telegram';
 import { circleClubs, useCircleStore } from '@/store/circle-store';
 import { BottomNav } from './bottom-nav';
 import { Header, Screen } from './shared';
 
-const VERSION_LABEL = 'ВЕРСИЯ ОТ 2026-05-08 14:44';
-
-export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReload, onBack, onHome, onClub }: { isDevFallback: boolean; initData: string; debugInfo: TelegramDebugInfo; onForceReload: () => void; onBack: () => void; onHome: () => void; onClub: () => void }) {
+export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDevFallback: boolean; onBack: () => void; onHome: () => void; onClub: () => void }) {
   const streak = useCircleStore((state) => state.streak);
   const totalPoints = useCircleStore((state) => state.totalPoints);
   const checkIns = useCircleStore((state) => state.checkIns);
@@ -21,23 +18,10 @@ export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReloa
   const referralBonusClaimed = useCircleStore((state) => state.referralBonusClaimed);
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
-  const [debugOpen, setDebugOpen] = useState(false);
-  const [sdkStatus, setSdkStatus] = useState<'FOUND' | 'NOT FOUND'>('NOT FOUND');
   const username = telegramUser?.username || 'telegram_user';
   const fullName = [telegramUser?.first_name, telegramUser?.last_name].filter(Boolean).join(' ') || 'Telegram User';
   const achievements = [streak >= 7, streak >= 30, totalPoints >= 100, checkIns.length >= 1, referralBonusClaimed].filter(Boolean).length;
   const joinedClubs = circleClubs.filter((club) => joinedClubIds.includes(club.id));
-  const versionBanner = (
-    <div style={{ background: 'red', color: 'white', padding: '20px', position: 'fixed', top: 0, zIndex: 9999 }}>
-      {VERSION_LABEL}
-      <br />
-      SDK: {sdkStatus}
-    </div>
-  );
-
-  useEffect(() => {
-    setSdkStatus(typeof window !== 'undefined' && window.Telegram ? 'FOUND' : 'NOT FOUND');
-  }, []);
 
   useEffect(() => {
     setAvatarFailed(false);
@@ -47,7 +31,6 @@ export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReloa
   if (!telegramUser?.id) {
     return (
       <Screen>
-        {versionBanner}
         <Header title="Профиль" onBack={onBack} />
         <Card className="text-center">
           <div className="mx-auto h-[104px] w-[104px] animate-pulse rounded-full bg-white/10" />
@@ -66,32 +49,12 @@ export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReloa
 
   return (
     <Screen>
-      {versionBanner}
       <Header title="Профиль" onBack={onBack} />
       {isDevFallback && (
         <div className="rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
           <span className="font-black">Dev Mode</span> · localhost использует тестовый профиль.
         </div>
       )}
-      <Card>
-        <button className="flex w-full items-center justify-between text-left text-sm font-black" onClick={() => setDebugOpen((value) => !value)}>
-          <span>Telegram Debug</span>
-          <span className="text-xs text-muted-foreground">{debugInfo.hasUser ? `user ${debugInfo.userId}` : 'no user'}</span>
-        </button>
-        {debugOpen && (
-          <div className="mt-3 space-y-2 rounded-2xl bg-white/[0.04] p-3 text-xs text-muted-foreground">
-            <p>isTelegram: {String(debugInfo.isTelegram)}</p>
-            <p>hasWindowTelegram: {String(debugInfo.hasWindowTelegram)}</p>
-            <p>hasWebApp: {String(debugInfo.hasWebApp)}</p>
-            <p>hasUser: {String(debugInfo.hasUser)}</p>
-            <p>userId: {debugInfo.userId ?? 'none'}</p>
-            <p>initDataLength: {debugInfo.initDataLength}</p>
-            <p>urlHasLaunchParams: {String(debugInfo.urlHasLaunchParams)}</p>
-            <p className="break-words">initData: {initData || debugInfo.initData || 'empty'}</p>
-            <button className="rounded-xl bg-emerald-300 px-3 py-2 font-black text-slate-950" onClick={onForceReload}>Force Reload SDK</button>
-          </div>
-        )}
-      </Card>
       <Card className="text-center">
         {telegramUser.photo_url && !avatarFailed ? (
           <div className="relative mx-auto h-[104px] w-[104px]">
