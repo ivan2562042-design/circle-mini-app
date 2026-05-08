@@ -1,9 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Camera, Flame, Sparkles } from 'lucide-react';
+import { Camera, Flame, Loader2, Sparkles } from 'lucide-react';
 import Image from 'next/image';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -19,14 +20,23 @@ export function ClubScreen({ clubId, onBack, onHome, onProfile }: { clubId: stri
   const { club, activities, leaderboard } = useClubData(clubId);
   const streak = useCircleStore((state) => state.streak);
   const reports = useCircleStore((state) => state.reports);
+  const lastReportDate = useCircleStore((state) => state.lastReportDate);
+  const telegramUser = useCircleStore((state) => state.telegramUser);
   const submitReport = useCircleStore((state) => state.submitReport);
   const referralBonusClaimed = useCircleStore((state) => state.referralBonusClaimed);
   const claimReferralBonus = useCircleStore((state) => state.claimReferralBonus);
   const [shareOpen, setShareOpen] = useState(false);
   const [lastCheckInPoints, setLastCheckInPoints] = useState(0);
   const [toast, setToast] = useState('');
-  const pendingReport = useMemo(() => reports.find((report) => report.clubId === clubId && report.status === 'pending'), [reports, clubId]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const today = new Date().toLocaleDateString('en-CA');
+  const currentUserId = String(telegramUser?.id ?? currentUser.telegramId);
+  const pendingReport = useMemo(() => reports.find((report) => report.clubId === clubId && report.userId === currentUserId && report.status === 'pending'), [reports, clubId, currentUserId]);
+  const reportCompletedToday = lastReportDate[clubId] === today;
   const userRank = leaderboard.find((entry) => entry.userId === currentUser.id)?.rank ?? 1;
+  const reportButtonDisabled = uploading || Boolean(pendingReport) || reportCompletedToday;
+  const reportButtonText = uploading ? 'Загрузка...' : pendingReport ? 'Отчет отправлен' : reportCompletedToday ? 'Приходи завтра' : 'Сдать отчет';
 
   const shareProgress = () => {
     const message = `🔥 Я держу серию уже ${streak} дней в Circle\n\n🚶 Сегодня:\n${club.title}\n\n🏆 Место в клубе: #${userRank}\n\nПрисоединяйся:\n@circle_habits_bot`;
@@ -46,11 +56,25 @@ export function ClubScreen({ clubId, onBack, onHome, onProfile }: { clubId: stri
     }
   };
 
-  const submitMockReport = () => {
-    const result = submitReport(clubId);
-    setToast(result.message);
-    triggerHaptic(result.ok ? 'success' : 'warning');
-    window.setTimeout(() => setToast(''), 3400);
+  const openReportPicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const submitSelectedReport = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setUploading(true);
+    setToast('Загружаем изображение...');
+
+    window.setTimeout(() => {
+      const result = submitReport(clubId, file);
+      setUploading(false);
+      setToast(result.message);
+      triggerHaptic(result.ok ? 'success' : 'warning');
+      window.setTimeout(() => setToast(''), 3400);
+    }, 1500);
   };
 
   return (
@@ -75,9 +99,11 @@ export function ClubScreen({ clubId, onBack, onHome, onProfile }: { clubId: stri
           <p className="text-sm text-muted-foreground">{club.description}</p>
           <Progress value={Math.min(100, streak * 7)} />
           {pendingReport && <div className="rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm font-bold text-amber-100">Отчет на проверке ИИ</div>}
-          <Button onClick={submitMockReport} disabled={Boolean(pendingReport)} className="w-full">
-            <Camera className="mr-2" size={18} />
-            {pendingReport ? 'Отчет отправлен' : 'Сдать отчет'}
+          {reportCompletedToday && <div className="rounded-2xl border border-emerald-300/25 bg-emerald-300/10 px-4 py-3 text-sm font-bold text-emerald-100">Выполнено сегодня</div>}
+          <input ref={fileInputRef} id="report-upload" type="file" accept="image/*" className="hidden" onChange={submitSelectedReport} />
+          <Button onClick={openReportPicker} disabled={reportButtonDisabled} className="w-full">
+            {uploading ? <Loader2 className="mr-2 animate-spin" size={18} /> : <Camera className="mr-2" size={18} />}
+            {reportButtonText}
           </Button>
         </div>
       </Card>

@@ -56,8 +56,14 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
 function ClubCard({ clubId, onOpen }: { clubId: string; onOpen: () => void }) {
   const { club, activities, leaderboard } = useClubData(clubId);
   const reports = useCircleStore((state) => state.reports);
+  const telegramUser = useCircleStore((state) => state.telegramUser);
+  const lastReportDate = useCircleStore((state) => state.lastReportDate);
   const leader = leaderboard[0];
-  const pendingReport = reports.some((report) => report.clubId === clubId && report.status === 'pending');
+  const currentUserId = String(telegramUser?.id ?? currentUser.telegramId);
+  const pendingReport = reports.some((report) => report.clubId === clubId && report.userId === currentUserId && report.status === 'pending');
+  const reportCompletedToday = lastReportDate[clubId] === new Date().toLocaleDateString('en-CA');
+  const reportStatus = pendingReport ? 'На проверке' : reportCompletedToday ? 'Выполнено (До завтра)' : 'Сдать отчет';
+  const reportStatusClass = pendingReport ? 'border-amber-300/25 bg-amber-300/10 text-amber-100' : reportCompletedToday ? 'border-emerald-300/25 bg-emerald-300/10 text-emerald-100' : 'border-white/10 bg-white/5 text-muted-foreground';
 
   return (
     <button onClick={onOpen} className="w-full text-left active:scale-[0.99]">
@@ -76,7 +82,7 @@ function ClubCard({ clubId, onOpen }: { clubId: string; onOpen: () => void }) {
             <span className="flex items-center gap-1 text-muted-foreground"><Trophy size={15} /> #{leaderboard.find((x) => x.userId === currentUser.id)?.rank ?? 4}</span>
             <span className="flex items-center gap-1 text-muted-foreground"><Activity size={15} /> {activities.length}</span>
           </div>
-          {pendingReport && <div className="rounded-2xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-bold text-amber-100">Отчет на проверке ИИ</div>}
+          <div className={`rounded-2xl border px-3 py-2 text-xs font-bold ${reportStatusClass}`}>{reportStatus}</div>
           {leader && <div className="flex items-center justify-between rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Лидер: {getUserById(leader.userId).firstName}</span><span className="text-sm font-black text-emerald-300">{leader.score}</span></div>}
         </div>
       </Card>

@@ -21,7 +21,10 @@ function getPersistStorage() {
 }
 
 function dateKey(value = new Date()) {
-  return value.toISOString().slice(0, 10);
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function daysBetween(from: string, to: string) {
@@ -44,6 +47,10 @@ function currentStreak(streak: number, lastCheckInDate: string | null) {
   return daysBetween(lastCheckInDate, dateKey()) > 1 ? 0 : streak;
 }
 
+function normalizeLastReportDate(value: Record<string, string> | string | null | undefined): Record<string, string> {
+  return value && typeof value === 'object' ? value : {};
+}
+
 const liveNotes = [
   'Закрыл цель и держу темп.',
   'Мини-победа дня ✅',
@@ -60,6 +67,11 @@ const liveImages = [
   'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80'
 ];
 
+export const mockReports: ReportItem[] = [
+  { id: 'demo-report-1', clubId: clubs[0].id, userId: users[1].telegramId, userName: users[1].firstName, image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=900&q=80', note: '12 100 шагов, скрин из шагомера.', points: 10, status: 'pending', createdAt: new Date(Date.now() - 1000 * 60 * 18).toISOString() },
+  { id: 'demo-report-2', clubId: clubs[1].id, userId: users[2].telegramId, userName: users[2].firstName, image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80', note: 'Тренировка загружена на проверку.', points: 10, status: 'pending', createdAt: new Date(Date.now() - 1000 * 60 * 42).toISOString() }
+];
+
 type CircleState = {
   onboarded: boolean;
   selectedClubId: string;
@@ -71,13 +83,14 @@ type CircleState = {
   reports: ReportItem[];
   joinedClubIds: string[];
   lastCheckInDate: string | null;
+  lastReportDate: Record<string, string>;
   telegramUser: TelegramUser | null;
   referralBonusClaimed: boolean;
   storageReady: boolean;
   storageKey: string;
   setStorageKey: (storageKey: string) => Promise<void>;
   initializeTelegramUser: (user: TelegramUser | undefined, isDevFallback: boolean) => void;
-  submitReport: (clubId: string) => { ok: boolean; message: string };
+  submitReport: (clubId: string, file: File) => { ok: boolean; message: string };
   moderateReport: (reportId: string, status: Extract<ReportStatus, 'approved' | 'rejected'>) => void;
   claimReferralBonus: () => boolean;
   simulateLiveActivity: () => void;
@@ -96,9 +109,10 @@ export const useCircleStore = create<CircleState>()(
       activities: activityFeed,
       leaderboard,
       checkIns: [],
-      reports: [],
+      reports: mockReports,
       joinedClubIds: [],
       lastCheckInDate: null,
+      lastReportDate: {},
       telegramUser: null,
       referralBonusClaimed: false,
       storageReady: false,
@@ -118,15 +132,17 @@ export const useCircleStore = create<CircleState>()(
           activities: activityFeed,
           leaderboard,
           checkIns: [],
-          reports: [],
+          reports: mockReports,
           joinedClubIds: [],
           lastCheckInDate: null,
+          lastReportDate: {},
           telegramUser: null,
           referralBonusClaimed: false,
           storageReady: false,
           storageKey
         });
         await useCircleStore.persist.rehydrate();
+        set((state) => ({ lastReportDate: normalizeLastReportDate(state.lastReportDate) }));
         set({ storageReady: true, storageKey });
       },
       initializeTelegramUser: (user, isDevFallback) => {
@@ -153,9 +169,9 @@ export const useCircleStore = create<CircleState>()(
             streak: isDevFallback ? currentUser.streak : 0,
             totalPoints: isDevFallback ? currentUser.totalPoints : 0,
             checkIns: [],
-            reports: [],
             joinedClubIds: [],
             lastCheckInDate: null,
+            lastReportDate: {},
             referralBonusClaimed: false
           });
           return;
@@ -167,21 +183,24 @@ export const useCircleStore = create<CircleState>()(
           totalPoints: isDevFallback ? state.totalPoints || currentUser.totalPoints : state.totalPoints
         }));
       },
-      submitReport: (clubId) => {
+      submitReport: (clubId, file) => {
         const today = dateKey();
         const user = get().telegramUser;
         const userId = String(user?.id ?? currentUser.telegramId);
-        const existing = get().reports.find((report) => report.clubId === clubId && report.userId === userId && report.createdAt.slice(0, 10) === today && report.status === 'pending');
+        const pendingToday = get().reports.find((report) => report.clubId === clubId && report.userId === userId && dateKey(new Date(report.createdAt)) === today && report.status === 'pending');
+        const approvedToday = get().lastReportDate[clubId] === today;
 
-        if (existing) return { ok: false, message: 'Отчет уже на проверке ИИ' };
+        if (pendingToday) return { ok: false, message: 'Отчет уже на проверке ИИ' };
+        if (approvedToday) return { ok: false, message: 'Сегодняшний отчет уже выполнен' };
 
         const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || currentUser.firstName;
+        const image = URL.createObjectURL(file);
         const report: ReportItem = {
           id: `report-${Date.now()}`,
           clubId,
           userId,
           userName: fullName,
-          image: 'https://api.dicebear.com/9.x/shapes/svg?seed=report-placeholder',
+          image,
           note: 'Отчет отправлен на проверку.',
           points: 10,
           status: 'pending',
@@ -214,6 +233,7 @@ export const useCircleStore = create<CircleState>()(
           streak: next,
           totalPoints: state.totalPoints + report.points,
           lastCheckInDate: today,
+          lastReportDate: { ...state.lastReportDate, [report.clubId]: today },
           checkIns: [checkIn, ...state.checkIns],
           joinedClubIds: Array.from(new Set([...state.joinedClubIds, report.clubId])),
           activities: [activity, ...state.activities].slice(0, 40)
@@ -292,6 +312,7 @@ export const useCircleStore = create<CircleState>()(
         reports: state.reports,
         joinedClubIds: state.joinedClubIds,
         lastCheckInDate: state.lastCheckInDate,
+        lastReportDate: state.lastReportDate,
         telegramUser: state.telegramUser,
         referralBonusClaimed: state.referralBonusClaimed
       }),

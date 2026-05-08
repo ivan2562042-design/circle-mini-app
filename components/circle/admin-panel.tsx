@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { circleClubs, useCircleStore } from '@/store/circle-store';
+import { circleClubs, mockReports, useCircleStore } from '@/store/circle-store';
 import type { ReportItem } from '@/types';
 import { Header, Screen } from './shared';
 
@@ -22,6 +22,7 @@ const statusClass: Record<ReportItem['status'], string> = {
 export function AdminPanel({ onBack }: { onBack: () => void }) {
   const reports = useCircleStore((state) => state.reports);
   const moderateReport = useCircleStore((state) => state.moderateReport);
+  const reportList = [...reports, ...mockReports.filter((mockReport) => !reports.some((report) => report.id === mockReport.id))];
 
   return (
     <Screen>
@@ -30,7 +31,7 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
         <p className="text-sm text-muted-foreground">Модерация отчетов пользователей перед начислением баллов и обновлением серии.</p>
       </Card>
       <div className="space-y-3">
-        {reports.length > 0 ? reports.map((report) => {
+        {reportList.length > 0 ? reportList.map((report) => {
           const club = circleClubs.find((item) => item.id === report.clubId);
 
           return (
