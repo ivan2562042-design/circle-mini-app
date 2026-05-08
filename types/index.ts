@@ -30,6 +30,21 @@ export type CheckInItem = {
   createdAt: string;
 };
 
+export type ReportStatus = 'pending' | 'approved' | 'rejected';
+
+export type ReportItem = {
+  id: string;
+  clubId: string;
+  userId: string;
+  userName: string;
+  image: string;
+  note: string;
+  points: number;
+  status: ReportStatus;
+  createdAt: string;
+  reviewedAt?: string;
+};
+
 export type ClubView = {
   id: string;
   title: string;

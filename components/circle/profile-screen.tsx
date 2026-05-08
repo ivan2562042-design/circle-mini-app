@@ -4,12 +4,13 @@ import { Award, Flame, Medal } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { circleClubs, useCircleStore } from '@/store/circle-store';
+import { ADMIN_ID, circleClubs, useCircleStore } from '@/store/circle-store';
 import { BottomNav } from './bottom-nav';
 import { Header, Screen } from './shared';
 
-export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDevFallback: boolean; onBack: () => void; onHome: () => void; onClub: () => void }) {
+export function ProfileScreen({ isDevFallback, onBack, onHome, onClub, onAdmin }: { isDevFallback: boolean; onBack: () => void; onHome: () => void; onClub: () => void; onAdmin: () => void }) {
   const streak = useCircleStore((state) => state.streak);
   const totalPoints = useCircleStore((state) => state.totalPoints);
   const checkIns = useCircleStore((state) => state.checkIns);
@@ -22,6 +23,7 @@ export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDev
   const fullName = [telegramUser?.first_name, telegramUser?.last_name].filter(Boolean).join(' ') || 'Telegram User';
   const achievements = [streak >= 7, streak >= 30, totalPoints >= 100, checkIns.length >= 1, referralBonusClaimed].filter(Boolean).length;
   const joinedClubs = circleClubs.filter((club) => joinedClubIds.includes(club.id));
+  const isAdmin = telegramUser?.id === ADMIN_ID;
 
   useEffect(() => {
     setAvatarFailed(false);
@@ -55,6 +57,7 @@ export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDev
           <span className="font-black">Dev Mode</span> · localhost использует тестовый профиль.
         </div>
       )}
+      {isAdmin && <Button onClick={onAdmin}>Панель директора</Button>}
       <Card className="text-center">
         {telegramUser.photo_url && !avatarFailed ? (
           <div className="relative mx-auto h-[104px] w-[104px]">

@@ -55,7 +55,9 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
 
 function ClubCard({ clubId, onOpen }: { clubId: string; onOpen: () => void }) {
   const { club, activities, leaderboard } = useClubData(clubId);
+  const reports = useCircleStore((state) => state.reports);
   const leader = leaderboard[0];
+  const pendingReport = reports.some((report) => report.clubId === clubId && report.status === 'pending');
 
   return (
     <button onClick={onOpen} className="w-full text-left active:scale-[0.99]">
@@ -74,6 +76,7 @@ function ClubCard({ clubId, onOpen }: { clubId: string; onOpen: () => void }) {
             <span className="flex items-center gap-1 text-muted-foreground"><Trophy size={15} /> #{leaderboard.find((x) => x.userId === currentUser.id)?.rank ?? 4}</span>
             <span className="flex items-center gap-1 text-muted-foreground"><Activity size={15} /> {activities.length}</span>
           </div>
+          {pendingReport && <div className="rounded-2xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-bold text-amber-100">Отчет на проверке ИИ</div>}
           {leader && <div className="flex items-center justify-between rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Лидер: {getUserById(leader.userId).firstName}</span><span className="text-sm font-black text-emerald-300">{leader.score}</span></div>}
         </div>
       </Card>

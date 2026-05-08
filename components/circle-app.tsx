@@ -2,6 +2,7 @@
 
 import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { AdminPanel } from '@/components/circle/admin-panel';
 import { ClubScreen, defaultClubId } from '@/components/circle/club-screen';
 import { HomeScreen } from '@/components/circle/home-screen';
 import { OnboardingScreen } from '@/components/circle/onboarding-screen';
@@ -10,7 +11,7 @@ import { useTelegram } from '@/hooks/use-telegram';
 import { currentUser } from '@/lib/mock-data';
 import { circleClubs, useCircleStore } from '@/store/circle-store';
 
-type Screen = 'onboarding' | 'home' | 'club' | 'profile';
+type Screen = 'onboarding' | 'home' | 'club' | 'profile' | 'admin';
 
 export function CircleApp() {
   const onboarded = useCircleStore((state) => state.onboarded);
@@ -84,7 +85,8 @@ export function CircleApp() {
           {screen === 'onboarding' && <OnboardingScreen key="onboarding" onStart={start} />}
           {screen === 'home' && <HomeScreen key="home" onOpenClub={openClub} onProfile={() => setScreen('profile')} />}
           {screen === 'club' && <ClubScreen key="club" clubId={selectedClubId} onBack={() => setScreen('home')} onHome={() => setScreen('home')} onProfile={() => setScreen('profile')} />}
-          {screen === 'profile' && <ProfileScreen key="profile" isDevFallback={isDevFallback} onBack={() => setScreen('home')} onHome={() => setScreen('home')} onClub={openDefaultClub} />}
+          {screen === 'profile' && <ProfileScreen key="profile" isDevFallback={isDevFallback} onBack={() => setScreen('home')} onHome={() => setScreen('home')} onClub={openDefaultClub} onAdmin={() => setScreen('admin')} />}
+          {screen === 'admin' && <AdminPanel key="admin" onBack={() => setScreen('profile')} />}
         </AnimatePresence>
       </div>
     </main>
