@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 222 47% 5%;
+  --foreground: 160 30% 96%;
+  --card: 222 38% 9%;
+  --card-foreground: 160 30% 96%;
+  --primary: 158 78% 58%;
+  --primary-foreground: 210 45% 8%;
+  --muted: 222 28% 16%;
+  --muted-foreground: 218 14% 68%;
+  --border: 220 24% 18%;
+  --ring: 158 78% 58%;
+}
+
+* { box-sizing: border-box; }
+
+html, body { min-height: 100%; background: #050812; color: hsl(var(--foreground)); }
+
+body { margin: 0; font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; }
+
+.telegram-shell {
+  background:
+    radial-gradient(circle at top left, rgba(93, 224, 175, 0.24), transparent 32rem),
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.15), transparent 26rem),
+    #050812;
+}
