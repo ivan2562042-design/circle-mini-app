@@ -10,7 +10,7 @@ import { circleClubs, useCircleStore } from '@/store/circle-store';
 import { BottomNav } from './bottom-nav';
 import { Header, Screen } from './shared';
 
-export function ProfileScreen({ isDevFallback, initData, debugInfo, onBack, onHome, onClub }: { isDevFallback: boolean; initData: string; debugInfo: TelegramDebugInfo; onBack: () => void; onHome: () => void; onClub: () => void }) {
+export function ProfileScreen({ isDevFallback, initData, debugInfo, onForceReload, onBack, onHome, onClub }: { isDevFallback: boolean; initData: string; debugInfo: TelegramDebugInfo; onForceReload: () => void; onBack: () => void; onHome: () => void; onClub: () => void }) {
   const streak = useCircleStore((state) => state.streak);
   const totalPoints = useCircleStore((state) => state.totalPoints);
   const checkIns = useCircleStore((state) => state.checkIns);
@@ -71,7 +71,8 @@ export function ProfileScreen({ isDevFallback, initData, debugInfo, onBack, onHo
             <p>userId: {debugInfo.userId ?? 'none'}</p>
             <p>initDataLength: {debugInfo.initDataLength}</p>
             <p>urlHasLaunchParams: {String(debugInfo.urlHasLaunchParams)}</p>
-            <p className="break-words">initData: {initData ? `${initData.slice(0, 180)}${initData.length > 180 ? '…' : ''}` : 'empty'}</p>
+            <p className="break-words">initData: {initData || debugInfo.initData || 'empty'}</p>
+            <button className="rounded-xl bg-emerald-300 px-3 py-2 font-black text-slate-950" onClick={onForceReload}>Force Reload SDK</button>
           </div>
         )}
       </Card>

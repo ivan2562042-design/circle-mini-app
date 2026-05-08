@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export type TelegramUser = {
   id?: number;
@@ -29,6 +29,7 @@ export type TelegramDebugInfo = {
   userId?: number;
   initDataLength: number;
   urlHasLaunchParams: boolean;
+  initData: string;
   userAgent: string;
 };
 
@@ -46,6 +47,7 @@ function getTelegramDebug(app: TelegramWebApp | null, isTelegram: boolean): Tele
     userId: app?.initDataUnsafe?.user?.id,
     initDataLength: app?.initData?.length ?? 0,
     urlHasLaunchParams: hasTelegramLaunchParams(),
+    initData: app?.initData ?? '',
     userAgent: navigator.userAgent
   };
 }
@@ -60,6 +62,21 @@ export function useTelegram() {
   const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isTelegram, setIsTelegram] = useState(false);
+  const forceReload = useCallback(() => {
+    const app = window.Telegram?.WebApp ?? null;
+    console.log('[Circle Telegram] Force reload SDK requested', getTelegramDebug(app, Boolean(app) || hasTelegramLaunchParams() || /Telegram/i.test(navigator.userAgent)));
+
+    if (!app) {
+      setWebApp(null);
+      setIsTelegram(hasTelegramLaunchParams() || /Telegram/i.test(navigator.userAgent));
+      return;
+    }
+
+    app.ready?.();
+    app.expand?.();
+    setIsTelegram(true);
+    setWebApp({ ...app });
+  }, []);
 
   useEffect(() => {
     const userAgentLooksTelegram = /Telegram/i.test(navigator.userAgent);
@@ -76,11 +93,11 @@ export function useTelegram() {
         return false;
       }
 
-      setIsTelegram(true);
       app.ready?.();
       app.expand?.();
+      setIsTelegram(true);
       document.documentElement.classList.add('dark');
-      setWebApp(app);
+      setWebApp({ ...app });
       setIsLoading(false);
       console.log('[Circle Telegram] WebApp detected', getTelegramDebug(app, true));
       return true;
@@ -106,5 +123,5 @@ export function useTelegram() {
 
   const debug = useMemo(() => getTelegramDebug(webApp, isTelegram), [webApp, isTelegram]);
 
-  return useMemo(() => ({ webApp, user: webApp?.initDataUnsafe?.user, initData: webApp?.initData ?? '', theme: webApp?.themeParams ?? {}, isLoading, isTelegram, debug }), [webApp, isLoading, isTelegram, debug]);
+  return useMemo(() => ({ webApp, user: webApp?.initDataUnsafe?.user, initData: webApp?.initData ?? '', theme: webApp?.themeParams ?? {}, isLoading, isTelegram, debug, forceReload }), [webApp, isLoading, isTelegram, debug, forceReload]);
 }
