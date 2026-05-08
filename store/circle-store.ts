@@ -60,6 +60,9 @@ type CircleState = {
   lastCheckInDate: string | null;
   telegramUser: TelegramUser | null;
   referralBonusClaimed: boolean;
+  storageReady: boolean;
+  storageKey: string;
+  setStorageForTelegramUser: (userId: number) => Promise<void>;
   initializeTelegramUser: (user?: TelegramUser) => void;
   claimReferralBonus: () => boolean;
   simulateLiveActivity: () => void;
@@ -73,8 +76,8 @@ export const useCircleStore = create<CircleState>()(
     (set, get) => ({
       onboarded: false,
       selectedClubId: clubs[0].id,
-      streak: currentUser.streak,
-      totalPoints: currentUser.totalPoints,
+      streak: 0,
+      totalPoints: 0,
       activities: activityFeed,
       leaderboard,
       checkIns: [],
@@ -82,10 +85,35 @@ export const useCircleStore = create<CircleState>()(
       lastCheckInDate: null,
       telegramUser: null,
       referralBonusClaimed: false,
+      storageReady: false,
+      storageKey: 'circle-store-pending',
       start: () => set({ onboarded: true }),
       selectClub: (clubId) => set({ selectedClubId: clubId, joinedClubIds: Array.from(new Set([...get().joinedClubIds, clubId])) }),
+      setStorageForTelegramUser: async (userId) => {
+        const nextKey = `circle-store-${userId}`;
+        if (get().storageReady && get().storageKey === nextKey) return;
+
+        useCircleStore.persist.setOptions({ name: nextKey });
+        set({
+          onboarded: false,
+          selectedClubId: clubs[0].id,
+          streak: 0,
+          totalPoints: 0,
+          activities: activityFeed,
+          leaderboard,
+          checkIns: [],
+          joinedClubIds: [],
+          lastCheckInDate: null,
+          telegramUser: null,
+          referralBonusClaimed: false,
+          storageReady: false,
+          storageKey: nextKey
+        });
+        await useCircleStore.persist.rehydrate();
+        set({ storageReady: true, storageKey: nextKey });
+      },
       initializeTelegramUser: (user) => {
-        if (!user?.id) return;
+        if (!user?.id || !get().storageReady) return;
 
         const currentTelegramUser = get().telegramUser;
         const normalizedUser: TelegramUser = {
@@ -184,7 +212,8 @@ export const useCircleStore = create<CircleState>()(
         lastCheckInDate: state.lastCheckInDate,
         telegramUser: state.telegramUser,
         referralBonusClaimed: state.referralBonusClaimed
-      })
+      }),
+      skipHydration: true
     }
   )
 );

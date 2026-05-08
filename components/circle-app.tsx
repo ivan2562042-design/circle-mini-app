@@ -18,21 +18,32 @@ export function CircleApp() {
   const selectClub = useCircleStore((state) => state.selectClub);
   const simulateLiveActivity = useCircleStore((state) => state.simulateLiveActivity);
   const initializeTelegramUser = useCircleStore((state) => state.initializeTelegramUser);
-  const { user } = useTelegram();
+  const setStorageForTelegramUser = useCircleStore((state) => state.setStorageForTelegramUser);
+  const storageReady = useCircleStore((state) => state.storageReady);
+  const { user, isLoading } = useTelegram();
   const [screen, setScreen] = useState<Screen>('onboarding');
 
   useEffect(() => {
+    if (!storageReady) return;
+    if (!onboarded) setScreen('onboarding');
     if (onboarded && screen === 'onboarding') setScreen('home');
-  }, [onboarded, screen]);
+  }, [onboarded, screen, storageReady]);
 
   useEffect(() => {
+    if (!storageReady) return;
     const timer = window.setInterval(simulateLiveActivity, 9000);
     return () => window.clearInterval(timer);
-  }, [simulateLiveActivity]);
+  }, [simulateLiveActivity, storageReady]);
 
   useEffect(() => {
+    if (!user?.id) return;
+    void setStorageForTelegramUser(user.id);
+  }, [setStorageForTelegramUser, user?.id]);
+
+  useEffect(() => {
+    if (!storageReady) return;
     initializeTelegramUser(user);
-  }, [initializeTelegramUser, user]);
+  }, [initializeTelegramUser, storageReady, user]);
 
   const openClub = (clubId: string) => {
     selectClub(clubId);
@@ -40,6 +51,25 @@ export function CircleApp() {
   };
 
   const openDefaultClub = () => openClub(selectedClubId || defaultClubId || circleClubs[0].id);
+
+  if (isLoading || !user?.id || !storageReady) {
+    return (
+      <main className="telegram-shell min-h-screen px-4 py-5">
+        <div className="mx-auto flex min-h-[calc(100vh-40px)] w-full max-w-md flex-col justify-center">
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-5">
+            <div className="mx-auto h-24 w-24 animate-pulse rounded-full bg-white/10" />
+            <div className="mx-auto mt-5 h-7 w-40 animate-pulse rounded-full bg-white/10" />
+            <div className="mx-auto mt-3 h-4 w-28 animate-pulse rounded-full bg-white/10" />
+            <div className="mt-8 grid grid-cols-3 gap-3">
+              <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
+              <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
+              <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="telegram-shell min-h-screen px-4 py-5">

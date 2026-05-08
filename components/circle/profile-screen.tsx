@@ -2,6 +2,7 @@
 
 import { Award, Flame, Medal } from 'lucide-react';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { circleClubs, useCircleStore } from '@/store/circle-store';
@@ -15,17 +16,46 @@ export function ProfileScreen({ onBack, onHome, onClub }: { onBack: () => void; 
   const joinedClubIds = useCircleStore((state) => state.joinedClubIds);
   const telegramUser = useCircleStore((state) => state.telegramUser);
   const referralBonusClaimed = useCircleStore((state) => state.referralBonusClaimed);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
   const username = telegramUser?.username || 'telegram_user';
   const fullName = [telegramUser?.first_name, telegramUser?.last_name].filter(Boolean).join(' ') || 'Telegram User';
   const achievements = [streak >= 7, streak >= 30, totalPoints >= 100, checkIns.length >= 1, referralBonusClaimed].filter(Boolean).length;
   const joinedClubs = circleClubs.filter((club) => joinedClubIds.includes(club.id));
 
+  useEffect(() => {
+    setAvatarFailed(false);
+    setAvatarLoaded(false);
+  }, [telegramUser?.photo_url]);
+
+  if (!telegramUser?.id) {
+    return (
+      <Screen>
+        <Header title="Профиль" onBack={onBack} />
+        <Card className="text-center">
+          <div className="mx-auto h-[104px] w-[104px] animate-pulse rounded-full bg-white/10" />
+          <div className="mx-auto mt-5 h-7 w-44 animate-pulse rounded-full bg-white/10" />
+          <div className="mx-auto mt-3 h-4 w-28 animate-pulse rounded-full bg-white/10" />
+          <div className="mt-5 grid grid-cols-4 gap-2">
+            <div className="h-20 animate-pulse rounded-2xl bg-white/5" />
+            <div className="h-20 animate-pulse rounded-2xl bg-white/5" />
+            <div className="h-20 animate-pulse rounded-2xl bg-white/5" />
+            <div className="h-20 animate-pulse rounded-2xl bg-white/5" />
+          </div>
+        </Card>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <Header title="Профиль" onBack={onBack} />
       <Card className="text-center">
-        {telegramUser?.photo_url ? (
-          <Image src={telegramUser.photo_url} alt="avatar" width={104} height={104} unoptimized className="mx-auto h-[104px] w-[104px] rounded-full bg-white/10 object-cover" />
+        {telegramUser.photo_url && !avatarFailed ? (
+          <div className="relative mx-auto h-[104px] w-[104px]">
+            {!avatarLoaded && <div className="absolute inset-0 animate-pulse rounded-full bg-white/10" />}
+            <Image src={telegramUser.photo_url} alt="avatar" width={104} height={104} unoptimized onLoad={() => setAvatarLoaded(true)} onError={() => setAvatarFailed(true)} className="h-[104px] w-[104px] rounded-full bg-white/10 object-cover" />
+          </div>
         ) : (
           <div className="mx-auto flex h-[104px] w-[104px] items-center justify-center rounded-full bg-gradient-to-br from-emerald-300 via-cyan-300 to-violet-400 text-4xl font-black text-slate-950">
             {fullName.slice(0, 1).toUpperCase()}
