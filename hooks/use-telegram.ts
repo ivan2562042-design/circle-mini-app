@@ -21,6 +21,35 @@ type TelegramWebApp = {
   initDataUnsafe?: { user?: TelegramUser };
 };
 
+export type TelegramDebugInfo = {
+  isTelegram: boolean;
+  hasWindowTelegram: boolean;
+  hasWebApp: boolean;
+  hasUser: boolean;
+  userId?: number;
+  initDataLength: number;
+  urlHasLaunchParams: boolean;
+  userAgent: string;
+};
+
+function hasTelegramLaunchParams() {
+  const source = `${window.location.search}&${window.location.hash.replace(/^#/, '')}`;
+  return source.includes('tgWebAppData') || source.includes('tgWebAppVersion') || source.includes('tgWebAppPlatform');
+}
+
+function getTelegramDebug(app: TelegramWebApp | null, isTelegram: boolean): TelegramDebugInfo {
+  return {
+    isTelegram,
+    hasWindowTelegram: Boolean(window.Telegram),
+    hasWebApp: Boolean(app),
+    hasUser: Boolean(app?.initDataUnsafe?.user?.id),
+    userId: app?.initDataUnsafe?.user?.id,
+    initDataLength: app?.initData?.length ?? 0,
+    urlHasLaunchParams: hasTelegramLaunchParams(),
+    userAgent: navigator.userAgent
+  };
+}
+
 declare global {
   interface Window {
     Telegram?: { WebApp?: TelegramWebApp };
@@ -33,9 +62,19 @@ export function useTelegram() {
   const [isTelegram, setIsTelegram] = useState(false);
 
   useEffect(() => {
+    const userAgentLooksTelegram = /Telegram/i.test(navigator.userAgent);
+    const urlLooksTelegram = hasTelegramLaunchParams();
+    if (userAgentLooksTelegram || urlLooksTelegram) {
+      setIsTelegram(true);
+      console.log('[Circle Telegram] Telegram environment hinted before SDK', { userAgentLooksTelegram, urlLooksTelegram, href: window.location.href });
+    }
+
     const load = () => {
       const app = window.Telegram?.WebApp ?? null;
-      if (!app) return false;
+      if (!app) {
+        console.log('[Circle Telegram] WebApp not available yet', { hasWindowTelegram: Boolean(window.Telegram), userAgent: navigator.userAgent, href: window.location.href });
+        return false;
+      }
 
       setIsTelegram(true);
       app.ready?.();
@@ -43,6 +82,7 @@ export function useTelegram() {
       document.documentElement.classList.add('dark');
       setWebApp(app);
       setIsLoading(false);
+      console.log('[Circle Telegram] WebApp detected', getTelegramDebug(app, true));
       return true;
     };
 
@@ -50,12 +90,13 @@ export function useTelegram() {
 
     const interval = window.setInterval(() => {
       if (load()) window.clearInterval(interval);
-    }, 100);
+    }, 150);
     const timer = window.setTimeout(() => {
       window.clearInterval(interval);
       load();
       setIsLoading(false);
-    }, 1200);
+      console.log('[Circle Telegram] SDK detection timeout', getTelegramDebug(window.Telegram?.WebApp ?? null, userAgentLooksTelegram || urlLooksTelegram));
+    }, 6000);
 
     return () => {
       window.clearInterval(interval);
@@ -63,5 +104,7 @@ export function useTelegram() {
     };
   }, []);
 
-  return useMemo(() => ({ webApp, user: webApp?.initDataUnsafe?.user, initData: webApp?.initData ?? '', theme: webApp?.themeParams ?? {}, isLoading, isTelegram }), [webApp, isLoading, isTelegram]);
+  const debug = useMemo(() => getTelegramDebug(webApp, isTelegram), [webApp, isTelegram]);
+
+  return useMemo(() => ({ webApp, user: webApp?.initDataUnsafe?.user, initData: webApp?.initData ?? '', theme: webApp?.themeParams ?? {}, isLoading, isTelegram, debug }), [webApp, isLoading, isTelegram, debug]);
 }

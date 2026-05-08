@@ -5,11 +5,12 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
+import type { TelegramDebugInfo } from '@/hooks/use-telegram';
 import { circleClubs, useCircleStore } from '@/store/circle-store';
 import { BottomNav } from './bottom-nav';
 import { Header, Screen } from './shared';
 
-export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDevFallback: boolean; onBack: () => void; onHome: () => void; onClub: () => void }) {
+export function ProfileScreen({ isDevFallback, initData, debugInfo, onBack, onHome, onClub }: { isDevFallback: boolean; initData: string; debugInfo: TelegramDebugInfo; onBack: () => void; onHome: () => void; onClub: () => void }) {
   const streak = useCircleStore((state) => state.streak);
   const totalPoints = useCircleStore((state) => state.totalPoints);
   const checkIns = useCircleStore((state) => state.checkIns);
@@ -18,6 +19,7 @@ export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDev
   const referralBonusClaimed = useCircleStore((state) => state.referralBonusClaimed);
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
+  const [debugOpen, setDebugOpen] = useState(false);
   const username = telegramUser?.username || 'telegram_user';
   const fullName = [telegramUser?.first_name, telegramUser?.last_name].filter(Boolean).join(' ') || 'Telegram User';
   const achievements = [streak >= 7, streak >= 30, totalPoints >= 100, checkIns.length >= 1, referralBonusClaimed].filter(Boolean).length;
@@ -55,6 +57,24 @@ export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDev
           <span className="font-black">Dev Mode</span> · localhost использует тестовый профиль.
         </div>
       )}
+      <Card>
+        <button className="flex w-full items-center justify-between text-left text-sm font-black" onClick={() => setDebugOpen((value) => !value)}>
+          <span>Telegram Debug</span>
+          <span className="text-xs text-muted-foreground">{debugInfo.hasUser ? `user ${debugInfo.userId}` : 'no user'}</span>
+        </button>
+        {debugOpen && (
+          <div className="mt-3 space-y-2 rounded-2xl bg-white/[0.04] p-3 text-xs text-muted-foreground">
+            <p>isTelegram: {String(debugInfo.isTelegram)}</p>
+            <p>hasWindowTelegram: {String(debugInfo.hasWindowTelegram)}</p>
+            <p>hasWebApp: {String(debugInfo.hasWebApp)}</p>
+            <p>hasUser: {String(debugInfo.hasUser)}</p>
+            <p>userId: {debugInfo.userId ?? 'none'}</p>
+            <p>initDataLength: {debugInfo.initDataLength}</p>
+            <p>urlHasLaunchParams: {String(debugInfo.urlHasLaunchParams)}</p>
+            <p className="break-words">initData: {initData ? `${initData.slice(0, 180)}${initData.length > 180 ? '…' : ''}` : 'empty'}</p>
+          </div>
+        )}
+      </Card>
       <Card className="text-center">
         {telegramUser.photo_url && !avatarFailed ? (
           <div className="relative mx-auto h-[104px] w-[104px]">
