@@ -63,7 +63,7 @@ type CircleState = {
   storageReady: boolean;
   storageKey: string;
   setStorageKey: (storageKey: string) => Promise<void>;
-  initializeTelegramUser: (user?: TelegramUser) => void;
+  initializeTelegramUser: (user: TelegramUser | undefined, isDevFallback: boolean) => void;
   claimReferralBonus: () => boolean;
   simulateLiveActivity: () => void;
   start: () => void;
@@ -112,11 +112,11 @@ export const useCircleStore = create<CircleState>()(
         await useCircleStore.persist.rehydrate();
         set({ storageReady: true, storageKey });
       },
-      initializeTelegramUser: (user) => {
+      initializeTelegramUser: (user, isDevFallback) => {
         if (!get().storageReady) return;
+        if (!user?.id && !isDevFallback) return;
 
-        const isMockUser = !user?.id;
-        const normalizedUser: TelegramUser = user?.id ? {
+        const normalizedUser: TelegramUser = !isDevFallback && user?.id ? {
           id: user.id,
           first_name: user.first_name,
           last_name: user.last_name,
@@ -133,8 +133,8 @@ export const useCircleStore = create<CircleState>()(
         if (!currentTelegramUser || currentTelegramUser.id !== normalizedUser.id) {
           set({
             telegramUser: normalizedUser,
-            streak: isMockUser ? currentUser.streak : 0,
-            totalPoints: isMockUser ? currentUser.totalPoints : 0,
+            streak: isDevFallback ? currentUser.streak : 0,
+            totalPoints: isDevFallback ? currentUser.totalPoints : 0,
             checkIns: [],
             joinedClubIds: [],
             lastCheckInDate: null,
@@ -143,7 +143,11 @@ export const useCircleStore = create<CircleState>()(
           return;
         }
 
-        set({ telegramUser: normalizedUser });
+        set((state) => ({
+          telegramUser: normalizedUser,
+          streak: isDevFallback ? state.streak || currentUser.streak : state.streak,
+          totalPoints: isDevFallback ? state.totalPoints || currentUser.totalPoints : state.totalPoints
+        }));
       },
       claimReferralBonus: () => {
         if (get().referralBonusClaimed) return false;

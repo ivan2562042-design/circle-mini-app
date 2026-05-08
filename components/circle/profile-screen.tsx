@@ -9,7 +9,7 @@ import { circleClubs, useCircleStore } from '@/store/circle-store';
 import { BottomNav } from './bottom-nav';
 import { Header, Screen } from './shared';
 
-export function ProfileScreen({ onBack, onHome, onClub }: { onBack: () => void; onHome: () => void; onClub: () => void }) {
+export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDevFallback: boolean; onBack: () => void; onHome: () => void; onClub: () => void }) {
   const streak = useCircleStore((state) => state.streak);
   const totalPoints = useCircleStore((state) => state.totalPoints);
   const checkIns = useCircleStore((state) => state.checkIns);
@@ -50,6 +50,11 @@ export function ProfileScreen({ onBack, onHome, onClub }: { onBack: () => void; 
   return (
     <Screen>
       <Header title="Профиль" onBack={onBack} />
+      {isDevFallback && (
+        <div className="rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+          <span className="font-black">Dev Mode</span> · localhost использует тестовый профиль.
+        </div>
+      )}
       <Card className="text-center">
         {telegramUser.photo_url && !avatarFailed ? (
           <div className="relative mx-auto h-[104px] w-[104px]">

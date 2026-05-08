@@ -21,8 +21,9 @@ export function CircleApp() {
   const initializeTelegramUser = useCircleStore((state) => state.initializeTelegramUser);
   const setStorageKey = useCircleStore((state) => state.setStorageKey);
   const storageReady = useCircleStore((state) => state.storageReady);
-  const { user, isLoading } = useTelegram();
+  const { user, isLoading, isTelegram } = useTelegram();
   const [screen, setScreen] = useState<Screen>('onboarding');
+  const isDevFallback = !isTelegram;
 
   useEffect(() => {
     if (!storageReady) return;
@@ -39,14 +40,16 @@ export function CircleApp() {
   useEffect(() => {
     if (isLoading) return;
 
+    if (isTelegram && !user?.id) return;
+
     const storageKey = user?.id ? `circle-store-${user.id}` : `circle-store-local-${currentUser.telegramId}`;
     void setStorageKey(storageKey);
-  }, [isLoading, setStorageKey, user?.id]);
+  }, [isLoading, isTelegram, setStorageKey, user?.id]);
 
   useEffect(() => {
     if (!storageReady) return;
-    initializeTelegramUser(user);
-  }, [initializeTelegramUser, storageReady, user]);
+    initializeTelegramUser(user, isDevFallback);
+  }, [initializeTelegramUser, isDevFallback, storageReady, user]);
 
   const openClub = (clubId: string) => {
     selectClub(clubId);
@@ -81,7 +84,7 @@ export function CircleApp() {
           {screen === 'onboarding' && <OnboardingScreen key="onboarding" onStart={start} />}
           {screen === 'home' && <HomeScreen key="home" onOpenClub={openClub} onProfile={() => setScreen('profile')} />}
           {screen === 'club' && <ClubScreen key="club" clubId={selectedClubId} onBack={() => setScreen('home')} onHome={() => setScreen('home')} onProfile={() => setScreen('profile')} />}
-          {screen === 'profile' && <ProfileScreen key="profile" onBack={() => setScreen('home')} onHome={() => setScreen('home')} onClub={openDefaultClub} />}
+          {screen === 'profile' && <ProfileScreen key="profile" isDevFallback={isDevFallback} onBack={() => setScreen('home')} onHome={() => setScreen('home')} onClub={openDefaultClub} />}
         </AnimatePresence>
       </div>
     </main>

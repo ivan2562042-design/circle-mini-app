@@ -3,9 +3,9 @@ import { ActivityItem, ClubView, LeaderboardEntry, MockUser } from '@/types';
 export const currentUser: MockUser = {
   id: 'u-you',
   telegramId: '100001',
-  username: 'you_circle',
-  firstName: 'Алексей',
-  avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=you',
+  username: 'dev_circle',
+  firstName: 'Dev User',
+  avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=dev-circle',
   streak: 6,
   totalPoints: 420,
   trustScore: 96
