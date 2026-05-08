@@ -17,6 +17,8 @@ export function HomeScreen({ onOpenClub, onProfile }: { onOpenClub: (id: string)
   const streak = useCircleStore((state) => state.streak);
   const totalPoints = useCircleStore((state) => state.totalPoints);
   const checkIns = useCircleStore((state) => state.checkIns);
+  const referralBonusClaimed = useCircleStore((state) => state.referralBonusClaimed);
+  const achievements = [streak >= 7, streak >= 30, totalPoints >= 100, checkIns.length >= 1, referralBonusClaimed].filter(Boolean).length;
 
   return (
     <Screen>
@@ -24,7 +26,7 @@ export function HomeScreen({ onOpenClub, onProfile }: { onOpenClub: (id: string)
       <Card className="overflow-hidden bg-gradient-to-br from-emerald-300/20 to-cyan-300/10 shadow-[0_0_42px_rgba(52,211,153,0.12)]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Твой streak</p>
+            <p className="text-sm text-muted-foreground">Твоя серия</p>
             <motion.p className="text-7xl font-black leading-none drop-shadow-[0_0_18px_rgba(52,211,153,0.35)]" animate={{ scale: [1, 1.04, 1] }} transition={{ duration: 1.6, repeat: Infinity }}>{streak}</motion.p>
           </div>
           <motion.div animate={{ y: [0, -4, 0], rotate: [-3, 5, -3] }} transition={{ duration: 1.4, repeat: Infinity }}>
@@ -32,12 +34,12 @@ export function HomeScreen({ onOpenClub, onProfile }: { onOpenClub: (id: string)
           </motion.div>
         </div>
         <Progress value={(streak % 7) * 14.28} className="mt-5" />
-        <p className="mt-2 text-xs text-muted-foreground">Ещё {7 - (streak % 7 || 7)} дней до weekly rewards</p>
+        <p className="mt-2 text-xs text-muted-foreground">Ещё {7 - (streak % 7 || 7)} дней до недельной награды</p>
       </Card>
       <WeeklyGoalRings checkInCount={checkIns.length} streak={streak} />
       <div className="grid grid-cols-2 gap-3">
-        <Metric icon={<Zap size={18} />} label="Points" value={totalPoints} />
-        <Metric icon={<Award size={18} />} label="Achievements" value="4" />
+        <Metric icon={<Zap size={18} />} label="Баллы" value={totalPoints} />
+        <Metric icon={<Award size={18} />} label="Достижения" value={achievements} />
       </div>
       <div className="space-y-3">
         {circleClubs.map((club) => <ClubCard key={club.id} clubId={club.id} onOpen={() => onOpenClub(club.id)} />)}
@@ -72,7 +74,7 @@ function ClubCard({ clubId, onOpen }: { clubId: string; onOpen: () => void }) {
             <span className="flex items-center gap-1 text-muted-foreground"><Trophy size={15} /> #{leaderboard.find((x) => x.userId === currentUser.id)?.rank ?? 4}</span>
             <span className="flex items-center gap-1 text-muted-foreground"><Activity size={15} /> {activities.length}</span>
           </div>
-          {leader && <div className="flex items-center justify-between rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Leader: {getUserById(leader.userId).firstName}</span><span className="text-sm font-black text-emerald-300">{leader.score}</span></div>}
+          {leader && <div className="flex items-center justify-between rounded-2xl bg-white/5 p-3"><span className="text-xs text-muted-foreground">Лидер: {getUserById(leader.userId).firstName}</span><span className="text-sm font-black text-emerald-300">{leader.score}</span></div>}
         </div>
       </Card>
     </button>

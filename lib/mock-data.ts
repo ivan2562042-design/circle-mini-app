@@ -33,7 +33,7 @@ export const clubs: ClubView[] = [
   {
     id: 'workouts',
     title: 'Тренировки',
-    description: 'Регулярные тренировки и check-in из зала.',
+    description: 'Регулярные тренировки и чекин из зала.',
     category: 'workout',
     image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
     memberLimit: 60,
@@ -62,6 +62,6 @@ export const leaderboard: LeaderboardEntry[] = clubs.flatMap((club) =>
 export const activityFeed: ActivityItem[] = [
   { id: 'a-1', userId: 'u-1', clubId: 'steps-10000', image: 'https://images.unsplash.com/photo-1486218119243-13883505764c?auto=format&fit=crop&w=900&q=80', note: '12 430 шагов. День закрыт спокойно.', points: 10, createdAt: new Date(Date.now() - 1000 * 60 * 21).toISOString() },
   { id: 'a-2', userId: 'u-2', clubId: 'running', image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=900&q=80', note: '5.4 км в лёгком темпе.', points: 10, createdAt: new Date(Date.now() - 1000 * 60 * 48).toISOString() },
-  { id: 'a-3', userId: 'u-3', clubId: 'workouts', image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80', note: 'Силовая + растяжка. Streak продолжается.', points: 10, createdAt: new Date(Date.now() - 1000 * 60 * 73).toISOString() },
+  { id: 'a-3', userId: 'u-3', clubId: 'workouts', image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80', note: 'Силовая + растяжка. Серия продолжается.', points: 10, createdAt: new Date(Date.now() - 1000 * 60 * 73).toISOString() },
   { id: 'a-4', userId: 'u-4', clubId: 'steps-10000', image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80', note: 'Прогулка после работы, 14 008 шагов.', points: 10, createdAt: new Date(Date.now() - 1000 * 60 * 130).toISOString() }
 ];

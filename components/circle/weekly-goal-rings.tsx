@@ -15,19 +15,19 @@ type Goal = {
 
 export function WeeklyGoalRings({ checkInCount, streak }: { checkInCount: number; streak: number }) {
   const goals: Goal[] = [
-    { label: 'Steps goal', value: Math.min(70000, checkInCount * 10000 + streak * 1200), target: 70000, unit: 'steps', color: '#34d399', icon: <Footprints size={16} /> },
-    { label: 'Running', value: Math.min(15, checkInCount * 2.5 + streak * 0.4), target: 15, unit: 'km', color: '#22d3ee', icon: <Route size={16} /> },
-    { label: 'Training', value: Math.min(4, checkInCount), target: 4, unit: 'sessions', color: '#a78bfa', icon: <Dumbbell size={16} /> }
+    { label: 'Шаги', value: checkInCount, target: 7, unit: 'дней', color: '#34d399', icon: <Footprints size={16} /> },
+    { label: 'Бег', value: 0, target: 7, unit: 'дней', color: '#22d3ee', icon: <Route size={16} /> },
+    { label: 'Тренировка', value: Math.min(7, streak), target: 7, unit: 'дней', color: '#a78bfa', icon: <Dumbbell size={16} /> }
   ];
 
   return (
     <Card>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">Weekly goals</p>
-          <h3 className="text-lg font-black">Retention rings</h3>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">ЦЕЛИ НА НЕДЕЛЮ</p>
+          <h3 className="text-lg font-black">Кольца прогресса</h3>
         </div>
-        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-muted-foreground">live</span>
+        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-muted-foreground">неделя</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
         {goals.map((goal) => <GoalRing key={goal.label} goal={goal} />)}

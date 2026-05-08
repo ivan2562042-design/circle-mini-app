@@ -69,25 +69,25 @@ export function ProfileScreen({ isDevFallback, onBack, onHome, onClub }: { isDev
         <h2 className="mt-3 text-2xl font-black">{fullName}</h2>
         <p className="text-muted-foreground">@{username}</p>
         <div className="mt-5 grid grid-cols-4 gap-2">
-          <Metric icon={<Flame size={18} />} label="Streak" value={streak} />
-          <Metric icon={<Medal size={18} />} label="Points" value={totalPoints} />
-          <Metric icon={<Award size={18} />} label="Badges" value={achievements} />
-          <Metric icon={<Medal size={18} />} label="Check-ins" value={checkIns.length} />
+          <Metric icon={<Flame size={18} />} label="Серия" value={streak} />
+          <Metric icon={<Medal size={18} />} label="Баллы" value={totalPoints} />
+          <Metric icon={<Award size={18} />} label="Значки" value={achievements} />
+          <Metric icon={<Medal size={18} />} label="Чекины" value={checkIns.length} />
         </div>
       </Card>
       <Card>
-        <h3 className="mb-3 font-black">Achievements</h3>
+        <h3 className="mb-3 font-black">Достижения</h3>
         <div className="grid grid-cols-2 gap-3">
-          <Badge title="7 days streak" active={streak >= 7} />
-          <Badge title="30 days goal" active={streak >= 30} />
-          <Badge title="Top club" active={totalPoints >= 100} />
-          <Badge title="Daily discipline" active={checkIns.length >= 1} />
-          <Badge title="Referral badge" active={referralBonusClaimed} />
+          <Badge title="7 дней подряд" active={streak >= 7} />
+          <Badge title="Цель 30 дней" active={streak >= 30} />
+          <Badge title="Топ клуба" active={totalPoints >= 100} />
+          <Badge title="Ежедневная дисциплина" active={checkIns.length >= 1} />
+          <Badge title="Реферальный значок" active={referralBonusClaimed} />
         </div>
       </Card>
       <Card>
-        <h3 className="mb-3 font-black">Joined clubs</h3>
-        {joinedClubs.length > 0 ? joinedClubs.map((club) => <div key={club.id} className="flex items-center justify-between border-b border-white/5 py-3 last:border-0"><span>{club.title}</span><span className="text-sm text-emerald-300">active</span></div>) : <p className="rounded-2xl bg-white/5 p-4 text-sm text-muted-foreground">Ты пока не вступил ни в один клуб.</p>}
+        <h3 className="mb-3 font-black">Мои клубы</h3>
+        {joinedClubs.length > 0 ? joinedClubs.map((club) => <div key={club.id} className="flex items-center justify-between border-b border-white/5 py-3 last:border-0"><span>{club.title}</span><span className="text-sm text-emerald-300">активен</span></div>) : <p className="rounded-2xl bg-white/5 p-4 text-sm text-muted-foreground">Ты пока не вступил ни в один клуб.</p>}
       </Card>
       <BottomNav active="profile" onHome={onHome} onClub={onClub} onProfile={() => undefined} />
     </Screen>

@@ -9,9 +9,9 @@ export function BottomNav({ active, onHome, onClub, onProfile }: { active: Circl
 
   return (
     <nav className="sticky bottom-3 mt-auto grid grid-cols-3 gap-2 rounded-3xl border border-white/10 bg-slate-950/85 p-2 shadow-2xl backdrop-blur-xl">
-      <button onClick={onHome} className={itemClass('home')}><Home size={20} />Home</button>
-      <button onClick={onClub} className={itemClass('club')}><Flame size={20} />Club</button>
-      <button onClick={onProfile} className={itemClass('profile')}><UserRound size={20} />Profile</button>
+      <button onClick={onHome} className={itemClass('home')}><Home size={20} />Главная</button>
+      <button onClick={onClub} className={itemClass('club')}><Flame size={20} />Клубы</button>
+      <button onClick={onProfile} className={itemClass('profile')}><UserRound size={20} />Профиль</button>
     </nav>
   );
 }
