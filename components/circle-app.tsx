@@ -7,6 +7,7 @@ import { HomeScreen } from '@/components/circle/home-screen';
 import { OnboardingScreen } from '@/components/circle/onboarding-screen';
 import { ProfileScreen } from '@/components/circle/profile-screen';
 import { useTelegram } from '@/hooks/use-telegram';
+import { currentUser } from '@/lib/mock-data';
 import { circleClubs, useCircleStore } from '@/store/circle-store';
 
 type Screen = 'onboarding' | 'home' | 'club' | 'profile';
@@ -18,7 +19,7 @@ export function CircleApp() {
   const selectClub = useCircleStore((state) => state.selectClub);
   const simulateLiveActivity = useCircleStore((state) => state.simulateLiveActivity);
   const initializeTelegramUser = useCircleStore((state) => state.initializeTelegramUser);
-  const setStorageForTelegramUser = useCircleStore((state) => state.setStorageForTelegramUser);
+  const setStorageKey = useCircleStore((state) => state.setStorageKey);
   const storageReady = useCircleStore((state) => state.storageReady);
   const { user, isLoading } = useTelegram();
   const [screen, setScreen] = useState<Screen>('onboarding');
@@ -36,9 +37,11 @@ export function CircleApp() {
   }, [simulateLiveActivity, storageReady]);
 
   useEffect(() => {
-    if (!user?.id) return;
-    void setStorageForTelegramUser(user.id);
-  }, [setStorageForTelegramUser, user?.id]);
+    if (isLoading) return;
+
+    const storageKey = user?.id ? `circle-store-${user.id}` : `circle-store-local-${currentUser.telegramId}`;
+    void setStorageKey(storageKey);
+  }, [isLoading, setStorageKey, user?.id]);
 
   useEffect(() => {
     if (!storageReady) return;
@@ -52,7 +55,7 @@ export function CircleApp() {
 
   const openDefaultClub = () => openClub(selectedClubId || defaultClubId || circleClubs[0].id);
 
-  if (isLoading || !user?.id || !storageReady) {
+  if (isLoading || !storageReady) {
     return (
       <main className="telegram-shell min-h-screen px-4 py-5">
         <div className="mx-auto flex min-h-[calc(100vh-40px)] w-full max-w-md flex-col justify-center">

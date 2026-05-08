@@ -62,7 +62,7 @@ type CircleState = {
   referralBonusClaimed: boolean;
   storageReady: boolean;
   storageKey: string;
-  setStorageForTelegramUser: (userId: number) => Promise<void>;
+  setStorageKey: (storageKey: string) => Promise<void>;
   initializeTelegramUser: (user?: TelegramUser) => void;
   claimReferralBonus: () => boolean;
   simulateLiveActivity: () => void;
@@ -89,11 +89,11 @@ export const useCircleStore = create<CircleState>()(
       storageKey: 'circle-store-pending',
       start: () => set({ onboarded: true }),
       selectClub: (clubId) => set({ selectedClubId: clubId, joinedClubIds: Array.from(new Set([...get().joinedClubIds, clubId])) }),
-      setStorageForTelegramUser: async (userId) => {
-        const nextKey = `circle-store-${userId}`;
-        if (get().storageReady && get().storageKey === nextKey) return;
+      setStorageKey: async (storageKey) => {
+        if (!storageKey) return;
+        if (get().storageReady && get().storageKey === storageKey) return;
 
-        useCircleStore.persist.setOptions({ name: nextKey });
+        useCircleStore.persist.setOptions({ name: storageKey });
         set({
           onboarded: false,
           selectedClubId: clubs[0].id,
@@ -107,28 +107,34 @@ export const useCircleStore = create<CircleState>()(
           telegramUser: null,
           referralBonusClaimed: false,
           storageReady: false,
-          storageKey: nextKey
+          storageKey
         });
         await useCircleStore.persist.rehydrate();
-        set({ storageReady: true, storageKey: nextKey });
+        set({ storageReady: true, storageKey });
       },
       initializeTelegramUser: (user) => {
-        if (!user?.id || !get().storageReady) return;
+        if (!get().storageReady) return;
 
-        const currentTelegramUser = get().telegramUser;
-        const normalizedUser: TelegramUser = {
+        const isMockUser = !user?.id;
+        const normalizedUser: TelegramUser = user?.id ? {
           id: user.id,
           first_name: user.first_name,
           last_name: user.last_name,
-          username: user.username || 'telegram_user',
+          username: user.username,
           photo_url: user.photo_url
+        } : {
+          id: Number(currentUser.telegramId),
+          first_name: currentUser.firstName,
+          username: currentUser.username,
+          photo_url: currentUser.avatar
         };
+        const currentTelegramUser = get().telegramUser;
 
-        if (!currentTelegramUser || currentTelegramUser.id !== user.id) {
+        if (!currentTelegramUser || currentTelegramUser.id !== normalizedUser.id) {
           set({
             telegramUser: normalizedUser,
-            streak: 0,
-            totalPoints: 0,
+            streak: isMockUser ? currentUser.streak : 0,
+            totalPoints: isMockUser ? currentUser.totalPoints : 0,
             checkIns: [],
             joinedClubIds: [],
             lastCheckInDate: null,
